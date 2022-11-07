@@ -48,10 +48,10 @@ class Curated:
 
 
         sfOptions = {
-                "sfURL": r"https://tm57257.europe-west4.gcp.snowflakecomputing.com/",
+                
                 "sfAccount": "tm57257",
-                "sfUser": "TESTDATA",
-                "sfPassword": "Welcome@1",
+                "sfUser": "",
+                "sfPassword": "",
                 "sfDatabase": "GURUDEV_DB",
                 "sfSchema": "PUBLIC",
                 "sfWarehouse": "COMPUTE_WH",
