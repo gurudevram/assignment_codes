@@ -4,8 +4,8 @@ import logging
 import pyspark.sql.functions as F
 
 class Initialize:
-    spark = SparkSession.builder.master("local[1]").appName("").enableHiveSupport().getOrCreate()
-    raw_data = spark.read.option("header", "false").option("delimiter", " ").csv(r"C:\Users\gurudev.r\Downloads\logdatafile_2.txt")
+    spark = SparkSession.builder.appName("").config('spark.jars.packages', 'net.snowflake:snowflake-jdbc:3.12.17,net.snowflake:spark-snowflake_2.12:2.11.0-spark_3.1').enableHiveSupport().getOrCreate()
+    raw_data = spark.read.option("header", "false").option("delimiter", " ").format("csv").load("C:\\Users\\gurudev.r\\Downloads\\logdatafile_2.txt")
 
 
     def __init__(self):
@@ -14,7 +14,8 @@ class Initialize:
 
     def read_from_raw_file(self):
         try:
-            self.raw_data = self.spark.read.option("delimiter", " ").csv("C:\Users\gurudev.r\Downloads\logdatafile_2.txt")
+            self.raw_data = self.spark.read.option("delimiter", " ").format("csv").load("C:\\Users\\gurudev.r\\Downloads\\logdatafile_2.txt")
+
             self.raw_data.show()
 
         except Exception as err:
@@ -23,7 +24,7 @@ class Initialize:
              sys.exit(1)
 
         else:
-            self.df.printSchema()
+            self.raw_data.printSchema()
 
     def get_columns(self):
         self.raw_data = self.raw_data.select(
@@ -51,24 +52,39 @@ class Initialize:
         #self.df.write.csv("   ", mode="append", header=True)
         #self.df.write.saveAsTable('raw_log_details')
 
+    def connect_to_snowflake(self):
+        self.sfOptions = {
+            "sfURL": r"https://tm57257.europe-west4.gcp.snowflakecomputing.com/",
+            "sfAccount":"tm57257",
+            "sfUser": "TESTDATA",
+            "sfPassword":"Welcome@1",
+            "sfDatabase":"GURUDEV_DB",
+            "sfSchema":"PUBLIC",
+            "sfWarehouse": "COMPUTE_WH",
+            "sfRole": "ACCOUNTADMIN"
+        }
+
+        self.raw_data.write.format("snowflake").options(**self.sfOptions).option("dbtable",
+                                                                           "{}".format(r"raw_log_details")).mode(
+            "overwrite").options(header=True).save()
 
 if __name__ == "__main__":
     # Start
     init = Initialize()
     try:
-        init.read_from_s3()
+        init.read_from_raw_file()
     except Exception as e:
-        logging.error('Error at %s', 'Reading from S3 Sink', exc_info=e)
+        logging.error('Error at %s', 'read_from_raw_file_s3', exc_info=e)
         sys.exit(1)
 
     try:
-        init.extract_columns()
+        init.get_columns()
     except Exception as e:
         logging.error('Error at %s', 'extract_column_regex', exc_info=e)
         sys.exit(1)
 
     try:
-        init.remove_character()
+        init.clean_columns()
     except Exception as e:
         logging.error('Error at %s', 'extract_column_regex', exc_info=e)
         sys.exit(1)
@@ -86,4 +102,7 @@ if __name__ == "__main__":
     except Exception as e:
       logging.error('Error at %s', 'write to hive', exc_info=e)
 
-
+    try:
+        init.connect_to_snowflake()
+    except Exception as e:
+        logging.error('Error at %s', 'snowflake dab creation', exc_info=e)
