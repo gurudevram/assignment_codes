@@ -72,7 +72,7 @@ def populate_file(loop_iterations_to_df, rows_to_pick, rows_to_avoid, data_df, s
 if __name__ == "__main__":
   # input log file path
   input_file_path = r"{}/{}.{}".format(env.log_file_path, env.log_file_name, env.log_file_extension)
-  # rows required
+  # rows required here
   rows_to_be_populated = env.increased_text_file_rows
   # output log file path
   save_to_path = r"{}/{}.{}".format(env.increased_text_file_path, env.increased_text_file_name.format(rows_to_be_populated), env.increased_text_file_extension)
